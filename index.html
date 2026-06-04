@@ -204,7 +204,7 @@
   .section-header {
     background: var(--army-green);
     color: #fff;
-    padding: 10px 16px;
+    padding: 8px 10px 8px 16px;
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
@@ -215,6 +215,49 @@
     gap: 8px;
   }
   .section-icon { font-size: 16px; }
+  .section-title { flex: 1; }
+
+  .bulk-btns {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .bulk-btn {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .bulk-btn:hover { background: rgba(255,255,255,0.25); border-color: #fff; }
+  .bulk-btn.bulk-na   { border-color: rgba(173,181,189,0.6); }
+  .bulk-btn.bulk-na:hover   { background: var(--na-color); border-color: var(--na-color); }
+  .bulk-btn.bulk-closed { border-color: rgba(107,203,119,0.6); }
+  .bulk-btn.bulk-closed:hover { background: var(--closed-color); border-color: var(--closed-color); }
+  .bulk-btn.bulk-reset { border-color: rgba(255,107,107,0.5); font-size: 11px; padding: 3px 7px; }
+  .bulk-btn.bulk-reset:hover { background: var(--open-color); border-color: var(--open-color); }
+
+  /* Confirmation flash on section header */
+  .section-header.bulk-flash {
+    animation: bulkFlash 0.5s ease;
+  }
+  @keyframes bulkFlash {
+    0%   { background: var(--army-green); }
+    40%  { background: #2d7a4f; }
+    100% { background: var(--army-green); }
+  }
+
+  @media print {
+    .bulk-btns { display: none !important; }
+    .section-header { padding: 4pt 6pt; }
+  }
 
   .subsection-header {
     background: var(--army-tan);
@@ -874,17 +917,33 @@ const DATA = [
 // State: { status: 'open'|'closed'|'na'|null, dateClose: '', comment: '' }
 const state = {};
 let idCounter = 0;
+const sectionGroups = {}; // sectionKey -> [item ids]
 
 function buildChecklist() {
   const body = document.getElementById('checklist-body');
   let lastSection = null;
+  let currentSectionKey = null;
+  let sectionHeaderEl = null;
 
   DATA.forEach(group => {
     if (group.section !== lastSection) {
-      const sh = document.createElement('div');
-      sh.className = 'section-header';
-      sh.innerHTML = `<span class="section-icon">${group.icon}</span>${group.section}`;
-      body.appendChild(sh);
+      // Finalize previous section header with bulk buttons
+      if (sectionHeaderEl && currentSectionKey) {
+        attachBulkButtons(sectionHeaderEl, currentSectionKey);
+      }
+
+      currentSectionKey = group.section.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      if (!sectionGroups[currentSectionKey]) sectionGroups[currentSectionKey] = [];
+
+      sectionHeaderEl = document.createElement('div');
+      sectionHeaderEl.className = 'section-header';
+      sectionHeaderEl.dataset.sectionKey = currentSectionKey;
+      sectionHeaderEl.innerHTML = `
+        <span class="section-icon">${group.icon}</span>
+        <span class="section-title">${group.section}</span>
+        <span class="bulk-btns" id="bulk-${currentSectionKey}"></span>
+      `;
+      body.appendChild(sectionHeaderEl);
       lastSection = group.section;
     }
     if (group.subsection) {
@@ -897,6 +956,7 @@ function buildChecklist() {
     group.items.forEach(item => {
       const id = `item-${idCounter++}`;
       state[id] = { status: null, dateClose: '', comment: '' };
+      if (currentSectionKey) sectionGroups[currentSectionKey].push(id);
 
       const div = document.createElement('div');
       div.className = 'checklist-item';
@@ -930,6 +990,11 @@ function buildChecklist() {
       body.appendChild(div);
     });
   });
+
+  // Attach bulk buttons to the last section
+  if (sectionHeaderEl && currentSectionKey) {
+    attachBulkButtons(sectionHeaderEl, currentSectionKey);
+  }
 
   // Events
   document.querySelectorAll('.status-btn').forEach(btn => {
@@ -1088,6 +1153,70 @@ function showMissingPanel(incompleteIds) {
 
 function closeMissingPanel() {
   document.getElementById('missing-panel').classList.remove('visible');
+}
+
+function attachBulkButtons(headerEl, sectionKey) {
+  const container = headerEl.querySelector(`#bulk-${sectionKey}`);
+  if (!container) return;
+
+  const btnClosed = document.createElement('button');
+  btnClosed.className = 'bulk-btn bulk-closed';
+  btnClosed.textContent = '✔ All CLOSED';
+  btnClosed.title = 'Mark all items in this section as CLOSED';
+  btnClosed.addEventListener('click', (e) => {
+    e.stopPropagation();
+    bulkApply(sectionKey, 'closed', headerEl);
+  });
+
+  const btnNA = document.createElement('button');
+  btnNA.className = 'bulk-btn bulk-na';
+  btnNA.textContent = '— All N/A';
+  btnNA.title = 'Mark all items in this section as N/A';
+  btnNA.addEventListener('click', (e) => {
+    e.stopPropagation();
+    bulkApply(sectionKey, 'na', headerEl);
+  });
+
+  const btnReset = document.createElement('button');
+  btnReset.className = 'bulk-btn bulk-reset';
+  btnReset.textContent = '↺';
+  btnReset.title = 'Reset all items in this section';
+  btnReset.addEventListener('click', (e) => {
+    e.stopPropagation();
+    bulkApply(sectionKey, null, headerEl);
+  });
+
+  container.appendChild(btnClosed);
+  container.appendChild(btnNA);
+  container.appendChild(btnReset);
+}
+
+function bulkApply(sectionKey, status, headerEl) {
+  const ids = sectionGroups[sectionKey] || [];
+  if (ids.length === 0) return;
+
+  // Confirm reset only
+  if (status === null) {
+    const confirmed = confirm(`Reset all ${ids.length} items in this section?`);
+    if (!confirmed) return;
+  }
+
+  ids.forEach(id => {
+    state[id].status = status;
+    if (status !== 'closed') state[id].dateClose = '';
+    refreshItem(id);
+    updatePrintRow(id);
+  });
+
+  updateSummary();
+  updateSideNav();
+
+  // Flash the header
+  if (headerEl) {
+    headerEl.classList.remove('bulk-flash');
+    void headerEl.offsetWidth;
+    headerEl.classList.add('bulk-flash');
+  }
 }
 
 buildChecklist();
