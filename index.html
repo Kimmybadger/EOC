@@ -65,6 +65,88 @@
     white-space: nowrap;
   }
   .print-btn:hover { background: #fff; }
+  .print-btn.disabled {
+    background: #888;
+    color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  /* ── MISSING ITEMS PANEL ── */
+  .missing-panel {
+    display: none;
+    background: #fff3f3;
+    border: 2px solid var(--open-color);
+    margin: 10px 14px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .missing-panel.visible { display: block; }
+  .missing-panel-header {
+    background: var(--open-color);
+    color: #fff;
+    padding: 8px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .missing-panel-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .missing-list { padding: 8px 0; max-height: 300px; overflow-y: auto; }
+  .missing-item {
+    padding: 7px 14px;
+    border-bottom: 1px solid #fdd;
+    cursor: pointer;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    transition: background 0.1s;
+  }
+  .missing-item:hover { background: #ffe8e8; }
+  .missing-item:last-child { border-bottom: none; }
+  .missing-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--open-color);
+    font-weight: 700;
+    min-width: 22px;
+    padding-top: 1px;
+  }
+  .missing-text { font-size: 12px; line-height: 1.4; color: #444; flex: 1; }
+  .missing-code {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--army-green);
+    font-weight: 700;
+    white-space: nowrap;
+    padding-top: 1px;
+  }
+
+  /* ── INCOMPLETE ITEM HIGHLIGHT ── */
+  .checklist-item.incomplete {
+    border-left: 4px solid var(--open-color);
+    background: #fff8f8;
+  }
+  .checklist-item.incomplete .item-question { color: #8b1a1a; }
+  .checklist-item.pulse {
+    animation: pulseRed 0.6s ease;
+  }
+  @keyframes pulseRed {
+    0%   { background: #fff; }
+    30%  { background: #ffd5d5; }
+    100% { background: #fff8f8; }
+  }
 
   /* ── META FIELDS ── */
   .meta-section {
@@ -289,6 +371,11 @@
     cursor: pointer;
     letter-spacing: 1.5px;
   }
+  .bottom-print-btn.disabled {
+    background: #666;
+    color: #aaa;
+    cursor: not-allowed;
+  }
 
   .spacer { height: 30px; }
 
@@ -412,7 +499,7 @@
     <div class="h1">EOC TOUR SURVEY CHECKLIST</div>
     <div class="subtitle">CAMP HUMPHREYS · MEDDAC-K / BAACH</div>
   </div>
-  <button class="print-btn" onclick="window.print()">🖨 PRINT</button>
+  <button class="print-btn disabled" id="top-print-btn" onclick="handlePrint()">🖨 PRINT</button>
 </div>
 
 <!-- META FIELDS -->
@@ -442,6 +529,14 @@
   <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-bar"></div></div>
 </div>
 
+<div class="missing-panel" id="missing-panel">
+  <div class="missing-panel-header">
+    <span>⚠ INCOMPLETE ITEMS — TAP TO JUMP</span>
+    <button class="missing-panel-close" onclick="closeMissingPanel()">✕</button>
+  </div>
+  <div class="missing-list" id="missing-list"></div>
+</div>
+
 <div id="checklist-body"></div>
 
 <!-- SUMMARY -->
@@ -461,7 +556,7 @@
       <span class="lbl">N/A</span>
     </div>
   </div>
-  <button class="bottom-print-btn" onclick="window.print()">🖨 PRINT REPORT</button>
+  <button class="bottom-print-btn disabled" id="bottom-print-btn" onclick="handlePrint()">🖨 PRINT REPORT</button>
 </div>
 <div class="spacer"></div>
 
@@ -750,12 +845,93 @@ function updateSummary() {
   const open = all.filter(s => s.status === 'open').length;
   const closed = all.filter(s => s.status === 'closed').length;
   const na = all.filter(s => s.status === 'na').length;
+  const remaining = total - answered;
 
   document.getElementById('prog-count').textContent = `${answered} / ${total}`;
   document.getElementById('prog-bar').style.width = `${(answered/total)*100}%`;
   document.getElementById('sum-open').textContent = open;
   document.getElementById('sum-closed').textContent = closed;
   document.getElementById('sum-na').textContent = na;
+
+  // Update incomplete highlights
+  Object.keys(state).forEach(id => {
+    const el = document.querySelector(`.checklist-item[data-id="${id}"]`);
+    if (!el) return;
+    if (state[id].status === null) {
+      el.classList.add('incomplete');
+    } else {
+      el.classList.remove('incomplete');
+    }
+  });
+
+  // Enable/disable print buttons
+  const allDone = remaining === 0;
+  const topBtn = document.getElementById('top-print-btn');
+  const botBtn = document.getElementById('bottom-print-btn');
+  if (allDone) {
+    topBtn.classList.remove('disabled');
+    botBtn.classList.remove('disabled');
+    topBtn.title = '';
+    botBtn.title = '';
+  } else {
+    topBtn.classList.add('disabled');
+    botBtn.classList.add('disabled');
+    topBtn.title = `${remaining} items remaining`;
+    botBtn.title = `${remaining} items remaining`;
+  }
+}
+
+function handlePrint() {
+  const incomplete = Object.keys(state).filter(id => state[id].status === null);
+  if (incomplete.length > 0) {
+    showMissingPanel(incomplete);
+    // Pulse all incomplete items
+    incomplete.forEach(id => {
+      const el = document.querySelector(`.checklist-item[data-id="${id}"]`);
+      if (el) {
+        el.classList.remove('pulse');
+        void el.offsetWidth; // reflow to restart animation
+        el.classList.add('pulse');
+      }
+    });
+    // Scroll to first incomplete
+    const first = document.querySelector(`.checklist-item[data-id="${incomplete[0]}"]`);
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    window.print();
+  }
+}
+
+function showMissingPanel(incompleteIds) {
+  const panel = document.getElementById('missing-panel');
+  const list = document.getElementById('missing-list');
+  list.innerHTML = '';
+  incompleteIds.forEach((id, idx) => {
+    const el = document.querySelector(`.checklist-item[data-id="${id}"]`);
+    if (!el) return;
+    const q = el.querySelector('.item-question').textContent;
+    const code = el.querySelector('.item-code').textContent;
+    const row = document.createElement('div');
+    row.className = 'missing-item';
+    row.innerHTML = `
+      <span class="missing-num">#${idx+1}</span>
+      <span class="missing-text">${q.length > 80 ? q.slice(0,80)+'…' : q}</span>
+      <span class="missing-code">${code}</span>
+    `;
+    row.addEventListener('click', () => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.remove('pulse');
+      void el.offsetWidth;
+      el.classList.add('pulse');
+    });
+    list.appendChild(row);
+  });
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function closeMissingPanel() {
+  document.getElementById('missing-panel').classList.remove('visible');
 }
 
 buildChecklist();
