@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EOC Tour Survey Checklist</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;500;600;700&display=swap');
+
+  :root {
+    --army-green: #4a5c3e;
+    --army-dark: #2d3a25;
+    --army-tan: #c8b89a;
+    --army-light: #f0ece3;
+    --accent: #8b3a3a;
+    --open-color: #c0392b;
+    --closed-color: #27ae60;
+    --na-color: #7f8c8d;
+    --border: #b5a892;
+    --shadow: rgba(45,58,37,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--army-light);
+    color: #2d2d2d;
+    min-height: 100vh;
+  }
+
+  /* ── SCREEN HEADER ── */
+  .screen-header {
+    background: var(--army-dark);
+    color: var(--army-tan);
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .screen-header h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    line-height: 1.3;
+  }
+  .screen-header .subtitle { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+
+  .print-btn {
+    background: var(--army-tan);
+    color: var(--army-dark);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .print-btn:hover { background: #fff; }
+
+  /* ── META FIELDS ── */
+  .meta-section {
+    background: #fff;
+    border-bottom: 3px solid var(--army-green);
+    padding: 14px 16px;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .meta-field { display: flex; flex-direction: column; gap: 4px; }
+  .meta-field.full { grid-column: 1 / -1; }
+  .meta-field label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--army-green);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .meta-field input {
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    background: var(--army-light);
+    color: #2d2d2d;
+  }
+  .meta-field input:focus { outline: none; border-color: var(--army-green); background: #fff; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    background: #fff;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 57px;
+    z-index: 99;
+  }
+  .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .progress-label { font-size: 11px; font-weight: 600; color: var(--army-green); }
+  .progress-count { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--accent); }
+  .progress-bar-bg { height: 6px; background: #e0d8cc; border-radius: 3px; overflow: hidden; }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--army-green), var(--closed-color));
+    border-radius: 3px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    background: var(--army-green);
+    color: #fff;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-icon { font-size: 16px; }
+
+  .subsection-header {
+    background: var(--army-tan);
+    color: var(--army-dark);
+    padding: 7px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-left: 4px solid var(--army-green);
+  }
+
+  /* ── CHECKLIST ITEMS ── */
+  .checklist-item {
+    background: #fff;
+    border-bottom: 1px solid #e8e2d8;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    transition: background 0.15s;
+  }
+  .checklist-item:active { background: #f5f0e8; }
+
+  .item-top { display: flex; gap: 10px; align-items: flex-start; }
+
+  .item-question {
+    font-size: 13px;
+    line-height: 1.45;
+    flex: 1;
+    color: #2d2d2d;
+  }
+  .item-ref {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: #888;
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  .item-code {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--army-green);
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+
+  /* ── STATUS BUTTONS ── */
+  .status-row { display: flex; gap: 6px; align-items: center; }
+  .status-btn {
+    padding: 5px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #f5f0e8;
+    color: #888;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .status-btn.active-open {
+    background: var(--open-color);
+    border-color: var(--open-color);
+    color: #fff;
+  }
+  .status-btn.active-closed {
+    background: var(--closed-color);
+    border-color: var(--closed-color);
+    color: #fff;
+  }
+  .status-btn.active-na {
+    background: var(--na-color);
+    border-color: var(--na-color);
+    color: #fff;
+  }
+
+  /* ── COMMENT INPUT ── */
+  .comment-input {
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    width: 100%;
+    background: var(--army-light);
+    color: #2d2d2d;
+    resize: none;
+  }
+  .comment-input:focus { outline: none; border-color: var(--army-green); background: #fff; }
+  .comment-row { display: none; }
+  .comment-row.visible { display: block; }
+
+  /* ── DATE CLOSED ── */
+  .date-closed-row { display: none; align-items: center; gap: 6px; }
+  .date-closed-row.visible { display: flex; }
+  .date-closed-row label { font-size: 10px; font-weight: 700; color: var(--closed-color); white-space: nowrap; }
+  .date-closed-row input {
+    border: 1.5px solid var(--closed-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--closed-color);
+    background: #f0fff4;
+    flex: 1;
+  }
+
+  /* ── BOTTOM SUMMARY ── */
+  .summary-section {
+    background: var(--army-dark);
+    color: var(--army-tan);
+    margin: 20px 0 0;
+    padding: 16px;
+    text-align: center;
+  }
+  .summary-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .summary-box {
+    background: rgba(255,255,255,0.07);
+    border-radius: 6px;
+    padding: 10px 6px;
+  }
+  .summary-box .val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    display: block;
+  }
+  .summary-box .lbl { font-size: 10px; opacity: 0.7; margin-top: 2px; display: block; }
+  .summary-box.open .val { color: #ff6b6b; }
+  .summary-box.closed .val { color: #6bcb77; }
+  .summary-box.na .val { color: #adb5bd; }
+
+  .bottom-print-btn {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 14px auto 0;
+    background: var(--army-tan);
+    color: var(--army-dark);
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1.5px;
+  }
+
+  .spacer { height: 30px; }
+
+  /* ════════════════════════════════
+     PRINT STYLES
+  ════════════════════════════════ */
+  @media print {
+    @page { size: A4; margin: 12mm 10mm; }
+
+    body { background: #fff; font-size: 9pt; }
+
+    .screen-header, .progress-wrap, .bottom-print-btn, .status-btn,
+    .comment-input, .date-closed-row label { display: none !important; }
+
+    .meta-section { border-bottom: 2pt solid #000; padding: 6pt 8pt; }
+    .meta-grid { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6pt; }
+    .meta-field input {
+      border: none;
+      border-bottom: 1pt solid #000;
+      background: transparent;
+      font-size: 9pt;
+      padding: 2pt 4pt;
+      border-radius: 0;
+    }
+    .meta-field label { font-size: 7pt; }
+
+    .section-header {
+      background: #333 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      color: #fff !important;
+      padding: 4pt 6pt;
+      font-size: 8pt;
+      margin-top: 8pt;
+      break-inside: avoid;
+    }
+    .subsection-header {
+      background: #ddd !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      padding: 3pt 6pt;
+      font-size: 7pt;
+    }
+
+    .checklist-item {
+      padding: 4pt 6pt;
+      border-bottom: 0.5pt solid #ccc;
+      break-inside: avoid;
+      gap: 3pt;
+    }
+    .item-top { gap: 6pt; }
+    .item-question { font-size: 8pt; line-height: 1.3; }
+    .item-ref { font-size: 6pt; }
+    .item-code { font-size: 8pt; }
+
+    .status-row { display: none; }
+
+    /* Print status as text */
+    .checklist-item::before { display: none; }
+    .print-status-row {
+      display: flex !important;
+      gap: 12pt;
+      align-items: center;
+      border-top: 0.5pt dashed #ccc;
+      padding-top: 2pt;
+      margin-top: 2pt;
+    }
+    .print-status-cell {
+      font-size: 7pt;
+      min-width: 60pt;
+    }
+    .print-status-cell span { font-weight: 700; }
+    .print-comment-cell { font-size: 7pt; flex: 1; }
+
+    .comment-row { display: block !important; }
+    .comment-row textarea {
+      border: none;
+      border-bottom: 0.5pt solid #ccc;
+      background: transparent;
+      font-size: 7pt;
+      padding: 1pt;
+      resize: none;
+      width: 100%;
+    }
+    .date-closed-row { display: flex !important; }
+    .date-closed-row label { display: block !important; font-size: 7pt; }
+    .date-closed-row input {
+      border: none;
+      border-bottom: 0.5pt solid #666;
+      background: transparent;
+      font-size: 7pt;
+      color: #000;
+    }
+
+    .summary-section {
+      background: #333 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      color: #fff !important;
+      margin-top: 10pt;
+      padding: 8pt;
+    }
+    .summary-grid { gap: 4pt; }
+    .summary-box { background: rgba(255,255,255,0.15) !important; padding: 4pt; }
+    .summary-box .val { font-size: 14pt; }
+    .summary-box .lbl { font-size: 7pt; }
+    .summary-box.open .val { color: #ff6b6b !important; }
+    .summary-box.closed .val { color: #6bcb77 !important; }
+    .summary-box.na .val { color: #aaa !important; }
+    .summary-title { font-size: 8pt; }
+
+    .spacer { height: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SCREEN HEADER -->
+<div class="screen-header">
+  <div>
+    <div class="h1">EOC TOUR SURVEY CHECKLIST</div>
+    <div class="subtitle">CAMP HUMPHREYS · MEDDAC-K / BAACH</div>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨 PRINT</button>
+</div>
+
+<!-- META FIELDS -->
+<div class="meta-section">
+  <div class="meta-grid">
+    <div class="meta-field">
+      <label>Date</label>
+      <input type="date" id="meta-date">
+    </div>
+    <div class="meta-field">
+      <label>Clinic</label>
+      <input type="text" id="meta-clinic" placeholder="Clinic name">
+    </div>
+    <div class="meta-field full">
+      <label>WMC's Name</label>
+      <input type="text" id="meta-wmc" placeholder="Waste Management Coordinator">
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-row">
+    <span class="progress-label">INSPECTION PROGRESS</span>
+    <span class="progress-count" id="prog-count">0 / 0</span>
+  </div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-bar"></div></div>
+</div>
+
+<div id="checklist-body"></div>
+
+<!-- SUMMARY -->
+<div class="summary-section">
+  <div class="summary-title">▸ INSPECTION SUMMARY ◂</div>
+  <div class="summary-grid">
+    <div class="summary-box open">
+      <span class="val" id="sum-open">0</span>
+      <span class="lbl">OPEN</span>
+    </div>
+    <div class="summary-box closed">
+      <span class="val" id="sum-closed">0</span>
+      <span class="lbl">CLOSED</span>
+    </div>
+    <div class="summary-box na">
+      <span class="val" id="sum-na">0</span>
+      <span class="lbl">N/A</span>
+    </div>
+  </div>
+  <button class="bottom-print-btn" onclick="window.print()">🖨 PRINT REPORT</button>
+</div>
+<div class="spacer"></div>
+
+<script>
+const DATA = [
+  {
+    section: "HAZMAT, HAZWASTE, & RMW Management",
+    icon: "☣",
+    subsection: null,
+    items: [
+      { q: "Is the appointed Waste Management Coordinator (WMC) trained IAW MEDDAC-K Reg 40-15 and are the training records and appointment orders on file?", ref: "MEDDAC-K Reg 40-15 para 6.f, 7.f. and 15.a / BAACH Reg 40-17 para 6.g.(2) / Policy #98, para 3.a.(1)", code: "H1" },
+      { q: "Is there an up-to-date Hazardous Chemical Inventory (HCI) and is it documented on the MEDDAC-K Form?", ref: "BAACH Reg 40-17. 6.h.(8)", code: "H2" },
+      { q: "Are SDSs available for all Hazardous Chemicals listed on the HCI?", ref: "BAACH Reg 40-17. 6.h.(8) / 9.a.(2)", code: "H3" },
+      { q: "Have the HCI and SDSs been sent to the MEDDAC-K Safety office and the ESEO e-mail address at: usarmy.yongsan.65-med-bde.list.hazmat@mail.mil?", ref: "BAACH Reg 40-17 6.h.(8) / MEDDAC-K HAZMAT and Waste Management Plan", code: "H4" },
+    ]
+  },
+  {
+    section: "HAZMAT, HAZWASTE, & RMW Management",
+    icon: "☣",
+    subsection: "Handling and Storage of HM and HW",
+    items: [
+      { q: "Are chemicals separated by hazard type?", ref: "MEDDAC-K Reg 385-2 6. b & d", code: "H5" },
+      { q: "Does the clinic/facility have chemical spill kits?", ref: "BAACH Reg 40-17 8.b (2) (b)", code: "H6" },
+      { q: "If yes, are appropriate chemical spill kits available?", ref: "BAACH Reg 40-17.8.b.(1).(a)", code: "H6" },
+      { q: "Are all hazardous chemical containers labeled in English?", ref: "BAACH Reg 40-17.8.b.(1).(a)", code: "H6" },
+      { q: "Are all employees trained on chemical/site-specific training by the WMC or supervisor and is it documented?", ref: "BAACH Reg 40-17.9.a.(2)", code: "H6" },
+      { q: "Are hazardous chemicals stored below eye level?", ref: "BAACH Reg 40-17.8.b.(2).(c)", code: "H6" },
+      { q: "Are labels intact, i.e., none missing and none coming loose?", ref: "BAACH Policy #97.5.c", code: "H7" },
+      { q: "Are all chemicals within expiration dates?", ref: "BAACH Policy #97.5.c", code: "H7" },
+      { q: "Are all hazardous chemical containers labeled in English?", ref: "BAACH Reg 40-17 8.b.(1).(a)", code: "H6" },
+      { q: "Are all chemicals within expiration dates?", ref: "BAACH Reg 40-17 9.a.(2)", code: "H6" },
+      { q: "Are chemicals separated by hazard type?", ref: "BAACH Reg 40-17 8.b.(2).(c)", code: "H6" },
+    ]
+  },
+  {
+    section: "Pharmaceutical Waste (PW)",
+    icon: "💊",
+    subsection: "Handling and Storage of Pharmaceutical Waste",
+    items: [
+      { q: "Are Bilingual 'BIO-HAZARD' LABELS (EAMC Label 7EK, Feb 94) used for marking the containers?", ref: "BDAACH Policy # 98, para 3.a.(2) & 3.e.(6)", code: "H5" },
+      { q: "Are all pharmacy employees trained in PW management and is it documented?", ref: "BDAACH Policy # 98, para 3.a.(4) and 4.a and Appendix A", code: "H8" },
+      { q: "Is non-hazardous pharmaceutical waste collected in the 'Blue' colored containers and labeled IAW MEDDAC-K policy?", ref: "BDAACH Policy # 98", code: "H8" },
+      { q: "Is the 'Packaging' of non-hazardous PW disposed of properly?", ref: "BDAACH Policy # 98, para 4.b. and Appendix A", code: "H8" },
+      { q: "Are U & P-Listed PW collected in 'BLACK' containers, and are containers labeled IAW MEDDAC-K Policy?", ref: "BDAACH Policy # 98, para 3.a.(4), 4.c (2), and Appendix A", code: "H8" },
+      { q: "Is Chemotherapy Waste collected in 'Yellow' bags and containers and labeled IAW MEDDAC-K policy?", ref: "BDAACH Policy # 98, para 3.a.(4), 4.c (1), and Appendix A", code: "H8" },
+      { q: "Is Chemotherapy Sharp Waste collected in 'Yellow' prepared containers and labeled IAW MEDDAC-K policy?", ref: "BDAACH Policy # 98, para 6.c.(1)(d)", code: "H8" },
+      { q: "Are weekly visual checks conducted for PW containers and documented and reported to the Environmental Protection Specialist?", ref: "BDAACH Policy # 98, para 3.e.", code: "H9" },
+      { q: "Are all NIOSH listed hazardous pharmaceutical waste collected in 'Black' containers.", ref: "MEDDAC-K Reg 40-15 8.e", code: "R2" },
+    ]
+  },
+  {
+    section: "Regulated Medical Waste (RMW)",
+    icon: "🩸",
+    subsection: "Handling and Storage of RMW",
+    items: [
+      { q: "Are all employees trained in handling and storage of RMW (initial and annual refresher) by the WMC or supervisor and is the training documented?", ref: "MEDDAC-K Reg 40-15, 15.b-f & MCKT 385-1, 18-3.f", code: "R1" },
+      { q: "Are sharps containers replaced when 3/4 full?", ref: "IC.02.01.01 EP 6", code: "R2" },
+      { q: "Are sharps/needles controlled at all times?", ref: "MEDDAC-K Reg 40-15 11.e.(6)", code: "R3" },
+      { q: "Is RMW only discarded in 'Red' RMW containers/bags? Is the RMW container free of any non-RMW?", ref: "MEDDAC-K Reg 40-15, para 8.h and Appendix C", code: "R3" },
+      { q: "Are all RMW bags/containers in good condition?", ref: "IC.02.01.01 EP 6", code: "R3" },
+      { q: "Is all red bag waste properly stored and transported?", ref: "MEDDAC-K Reg 40-15, para 8, 9, & 11", code: "R5" },
+      { q: "Does the clinic/facility have a Bio-hazard spill kit?", ref: "MEDDAC-K Reg 40-15, para 13.b and Appendix E", code: "R6" },
+      { q: "If yes, are the kits appropriate and are there enough?", ref: "MEDDAC-K Reg 40-15, para 13.b and Appendix E", code: "R6" },
+      { q: "Are the RMW spill clean-up procedures posted and readily available for review?", ref: "MEDDAC-K 40-15, para 13d. and App F", code: "R4" },
+      { q: "Is the RMW Storage area marked with the universal biohazard symbol in English and Korean. (Door, Carts, and storage containers)?", ref: "MEDDAC-K Reg 40-15, 11.e.(6)", code: "R7" },
+      { q: "Is the RMW Storage area checked weekly for odor and spills? Is the weekly check documented on a log sheet?", ref: "MEDDAC-K Reg 40-15, 11.e.(6) and 9.b", code: "R7" },
+    ]
+  },
+  {
+    section: "Satellite Accumulation Point (SAP)",
+    icon: "🏭",
+    subsection: null,
+    items: [
+      { q: "Does the clinic have a Spill Response Plan for its SAP? Is it posted at the site?", ref: "BAACH Reg 40-17. 9.b", code: "S1" },
+      { q: "Are containers of HW in good condition; free of rust, bulges, or leaks?", ref: "BAACH Reg 40-17.9.d", code: "S2" },
+      { q: "Are containers of HW kept closed except when it is necessary to add or remove waste?", ref: "BAACH Reg 40-17.9.d", code: "S3" },
+      { q: "Are all containers marked with labels indicating the class of Hazwaste contained?", ref: "BAACH Reg 40-17.6.h.(1)", code: "S2" },
+      { q: "Do liquid HWs have secondary containment that has the capacity to contain 10% of the volume of the stored HW or the volume of the largest container, whichever is greater?", ref: "BAACH Reg 40-17.8.b.2.(a) / USFK 201-1, chapter 6-3.c.(3)", code: "S3" },
+      { q: "Is the SAP area visually checked weekly? Is the inspection documented?", ref: "BAACH Reg 40-17.6.h.(3)", code: "S4" },
+      { q: "Is the monthly SAP checklist sent to MEDDAC-K ESEO via usarmy.yongsan.65-medbde.list.hazmat@mail.mil?", ref: "BAACH Reg 40-17.6.h.(3)", code: "S5" },
+    ]
+  },
+  {
+    section: "Spill Response",
+    icon: "⚠",
+    subsection: "Spill Response and Clean-Up Procedures",
+    items: [
+      { q: "Are all employees trained on HM, HW, and RMW spill and clean-up procedures? Is the training documented?", ref: "USA MEDDAC-K Reg 40-15 and 40-17", code: "S6" },
+      { q: "Has the clinic had any spills or exposures within: the past week, month, 6 months or year? If yes, how were they reported?", ref: "USA MEDDAC-K policy #97.5.b", code: "S7" },
+      { q: "If there was a spill: HM, HW, RMW Spill report submitted to usarmy.yonsan.65-medbde.list.hazmat@mail.mil or contact 65th Med Bde ESEO?", ref: "USA MEDDAC-K policy #97.5.b", code: "S7" },
+    ]
+  },
+  {
+    section: "Personal Protective Equipment (PPE)",
+    icon: "🥽",
+    subsection: null,
+    items: [
+      { q: "Is PPE available? If yes, PPE properly used or stored?", ref: "MEDDAC-K Reg 40-15.8.h and 40-17 / MCKT Reg 385-1.20-3.e~g", code: "P1" },
+      { q: "Are all employees trained on the donning, doffing, and care of PPE by the supervisor? Is the training documented?", ref: "BAACH Reg 40-17.6.h.(5) / Policy #97.5.b.d / MCKT Reg 385-1. 20-3.f.(3)", code: "P2" },
+    ]
+  },
+  {
+    section: "Eyewash Stations (If Required)",
+    icon: "👁",
+    subsection: null,
+    items: [
+      { q: "Are all employees trained on the use of emergency eyewash (and) shower station? Do they know the location? Is the training documented?", ref: "MCKT Reg 385-1. para 21-4.c.(1)", code: "E1" },
+      { q: "Are eyewash stations activated weekly and documented on the MEDDAC-K Form?", ref: "MCKT Reg 385-1. para 21-4.c.(2)", code: "E2" },
+      { q: "Is the emergency eyewash valve designed so the valve opens in one fluid movement, remains on without use of operator's hands, remains activated until intentionally shut off and goes from 'off' to 'on' in one second or less?", ref: "MCKT Reg 385-1. para 21-3.b. and para 21-4.c.(3)", code: "E3" },
+      { q: "Is the eyewash within 10 seconds of any worker in the area where HM are used? Is the pathway unimpeded?", ref: "MCKT Reg 385-1. para 21-3.a and para 21-4.c.(3)", code: "E4" },
+    ]
+  },
+  {
+    section: "Flammable Cabinet (If >10 gal flammables)",
+    icon: "🔥",
+    subsection: null,
+    items: [
+      { q: "Are there no more than 10 gallons of flammable liquids stored outside the flammable cabinet?", ref: "BAACH Reg 40-17 8.b.(1).(a)", code: "F1" },
+      { q: "Is/Are the flammable cabinet(s) labeled properly?", ref: "29 CFR 1910.1200(e)(1)(i) EC.02.02.01 EP 1", code: "F2" },
+      { q: "Is there an HCI posted on the flammable cabinet door?", ref: "BAACH Reg 40-17 8.b.(2)", code: "F3" },
+      { q: "Does the flammable cabinet only contain flammables?", ref: "BAACH Reg 40-17 8.b.(1).(a)", code: "F4" },
+      { q: "Are all flammables stored properly?", ref: "BAACH Reg 40-17 8.b.(2).(d)", code: "F4" },
+      { q: "Are all flammables labeled correctly?", ref: "BAACH Reg 40-17 8.b.(2).(d)", code: "F5" },
+      { q: "Are there items stored in front or on top of the flammable cabinet?", ref: "BAACH Reg 40-17 8.b.(2).(d)", code: "F6" },
+    ]
+  },
+  {
+    section: "Radiation Safety (If Required)",
+    icon: "☢",
+    subsection: null,
+    items: [
+      { q: "1. Does the Clinic have a radiation safety binder?", ref: "MEDDAC-K Reg 40-16. 6.a / 6.c.(1)", code: "RP1" },
+      { q: "2. Is there a clinic SOP and is it current (reviewed within the last year)?", ref: "MEDDAC-K Reg 40-16. 6.b.(3) / 6.c.(6)", code: "RP1" },
+      { q: "3. Is 'leaded' PPE available? Aprons, Gloves, Thyroid shield, etc.", ref: "MEDDAC-K Reg 40-16. 6.c.(10)", code: "RP2" },
+      { q: "3a. Are they stored/draped properly?", ref: "MEDDAC-K Reg 40-16 6.c.(10) / Appendix D.14.", code: "RP2" },
+      { q: "3b. Are lead shields used by X-ray visually inspected every six months?", ref: "MEDDAC-K Reg 40-16. Appendix D.14.", code: "RP2" },
+      { q: "3c. Were any lead shields found to be damaged with visible hole(s) or tear(s)?", ref: "MEDDAC-K Reg 40-16. Appendix D.14.", code: "RP2" },
+      { q: "3e. Were the repairs done IAW the procedure listed in MEDDAC-K Reg 40-16, App D, para 14?", ref: "", code: "RP2" },
+      { q: "3f. Were the lead shields disposed of? To whom?", ref: "", code: "RP2" },
+      { q: "3g. Does the Clinic have an MFR documenting the semi-annual visual inspections, any repairs or the disposal of any lead shields?", ref: "MEDDAC-K Reg 40-16.6.c.(6) / Appendix D.14", code: "RP2" },
+      { q: "4. Does the x-ray room have door interlocks?", ref: "MEDDAC-K Reg 40-16.6.b.(13),(15) / 8.a.(3)(b)", code: "RP3" },
+      { q: "5. Are Radiation warning signs posted?", ref: "", code: "RP4" },
+      { q: "6. Are Pregnant Patient signs posted? If yes, are they bilingual? (N/A for Vet Clinics)", ref: "MEDDAC-K Reg 40-16.6.c.(13)", code: "RP5" },
+      { q: "7. Are OSLDs used? (Only applies to BDAACH unless pregnancy declared)", ref: "MEDDAC-K Reg 40-16. 6.e / 8.b / Appendix B.4", code: "RP6" },
+      { q: "7a. Is the OSLD storage area adequate? If yes, is there a letter from the MEDDAC-K RSO approving the location?", ref: "MEDDAC-K Reg 40-16.6.c.(5)", code: "RP6" },
+      { q: "7b. Are OSLD's properly worn? (Ask the Techs how they are worn if not visible during the inspections)", ref: "", code: "RP6" },
+      { q: "8. Is a retake log maintained? If yes, how is the data sent to the MEDDAC-K RSO?", ref: "MEDDAC-K Reg 40-16. 8.e", code: "RP7" },
+      { q: "9. Is ALARA training being done annually for the x-ray Dept staff?", ref: "MEDDAC-K Reg 40-16. 6.c.(8)", code: "RP8" },
+      { q: "9a. Is training documented? If yes, how is it documented?", ref: "", code: "RP8" },
+      { q: "10. Does the Clinic have the latest USAPHC survey reports? (medical units annual surveys, dental every 2 years and Vet every 3 years)", ref: "MEDDAC-K Reg 40-16.6.b.(4)", code: "RP9" },
+      { q: "If yes, have all the discrepancies from the latest USAPHC report been corrected?", ref: "", code: "RP9" },
+      { q: "If no, do you know where to get a copy of the report?", ref: "", code: "RP9" },
+      { q: "11. Has the Clinic had a Quality Assurance Review done by USAPHC?", ref: "MEDDAC-K Reg 40-16.8.e.", code: "RP10" },
+      { q: "11a. Have all the discrepancies been corrected?", ref: "MEDDAC-K Reg 40-16.8.e.", code: "RP10" },
+    ]
+  },
+];
+
+// State: { status: 'open'|'closed'|'na'|null, dateClose: '', comment: '' }
+const state = {};
+let idCounter = 0;
+
+function buildChecklist() {
+  const body = document.getElementById('checklist-body');
+  let lastSection = null;
+
+  DATA.forEach(group => {
+    if (group.section !== lastSection) {
+      const sh = document.createElement('div');
+      sh.className = 'section-header';
+      sh.innerHTML = `<span class="section-icon">${group.icon}</span>${group.section}`;
+      body.appendChild(sh);
+      lastSection = group.section;
+    }
+    if (group.subsection) {
+      const sub = document.createElement('div');
+      sub.className = 'subsection-header';
+      sub.textContent = group.subsection;
+      body.appendChild(sub);
+    }
+
+    group.items.forEach(item => {
+      const id = `item-${idCounter++}`;
+      state[id] = { status: null, dateClose: '', comment: '' };
+
+      const div = document.createElement('div');
+      div.className = 'checklist-item';
+      div.dataset.id = id;
+      div.innerHTML = `
+        <div class="item-top">
+          <div>
+            <div class="item-question">${item.q}</div>
+            ${item.ref ? `<div class="item-ref">${item.ref}</div>` : ''}
+          </div>
+          <div class="item-code">${item.code}</div>
+        </div>
+        <div class="status-row">
+          <button class="status-btn" data-id="${id}" data-val="open">OPEN</button>
+          <button class="status-btn" data-id="${id}" data-val="closed">CLOSED</button>
+          <button class="status-btn" data-id="${id}" data-val="na">N/A</button>
+        </div>
+        <div class="date-closed-row" id="date-row-${id}">
+          <label>Date Closed:</label>
+          <input type="date" id="date-${id}">
+        </div>
+        <div class="comment-row" id="comment-row-${id}">
+          <textarea class="comment-input" id="comment-${id}" rows="2" placeholder="Comments..."></textarea>
+        </div>
+        <div class="print-status-row" style="display:none" id="print-row-${id}">
+          <div class="print-status-cell">Status: <span id="ps-${id}">—</span></div>
+          <div class="print-status-cell" id="pd-${id}"></div>
+          <div class="print-comment-cell" id="pc-${id}"></div>
+        </div>
+      `;
+      body.appendChild(div);
+    });
+  });
+
+  // Events
+  document.querySelectorAll('.status-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const val = btn.dataset.val;
+      state[id].status = state[id].status === val ? null : val;
+      refreshItem(id);
+      updateSummary();
+    });
+  });
+
+  document.querySelectorAll('[id^="comment-"]').forEach(ta => {
+    const id = ta.id.replace('comment-', '');
+    ta.addEventListener('input', () => { state[id].comment = ta.value; updatePrintRow(id); });
+  });
+  document.querySelectorAll('[id^="date-"]').forEach(inp => {
+    if (!inp.id.startsWith('date-item')) return;
+  });
+  // date inputs
+  body.querySelectorAll('input[type=date]').forEach(inp => {
+    if (inp.id.startsWith('date-item') || inp.id.startsWith('date-')) {
+      const id = inp.id.replace('date-', '');
+      if (state[id] !== undefined) {
+        inp.addEventListener('change', () => { state[id].dateClose = inp.value; updatePrintRow(id); });
+      }
+    }
+  });
+
+  updateSummary();
+}
+
+function refreshItem(id) {
+  const s = state[id].status;
+  const btns = document.querySelectorAll(`.status-btn[data-id="${id}"]`);
+  btns.forEach(b => {
+    b.classList.remove('active-open','active-closed','active-na');
+    if (s === b.dataset.val) {
+      b.classList.add(`active-${s}`);
+    }
+  });
+  const commentRow = document.getElementById(`comment-row-${id}`);
+  const dateRow = document.getElementById(`date-row-${id}`);
+  if (s === 'open') {
+    commentRow.classList.add('visible');
+    dateRow.classList.remove('visible');
+  } else if (s === 'closed') {
+    commentRow.classList.add('visible');
+    dateRow.classList.add('visible');
+  } else {
+    commentRow.classList.remove('visible');
+    dateRow.classList.remove('visible');
+  }
+  updatePrintRow(id);
+}
+
+function updatePrintRow(id) {
+  const s = state[id];
+  document.getElementById(`ps-${id}`).textContent = s.status ? s.status.toUpperCase() : '—';
+  const pd = document.getElementById(`pd-${id}`);
+  pd.textContent = s.status === 'closed' && s.dateClose ? `Closed: ${s.dateClose}` : '';
+  document.getElementById(`pc-${id}`).textContent = s.comment || '';
+}
+
+function updateSummary() {
+  const all = Object.values(state);
+  const total = all.length;
+  const answered = all.filter(s => s.status !== null).length;
+  const open = all.filter(s => s.status === 'open').length;
+  const closed = all.filter(s => s.status === 'closed').length;
+  const na = all.filter(s => s.status === 'na').length;
+
+  document.getElementById('prog-count').textContent = `${answered} / ${total}`;
+  document.getElementById('prog-bar').style.width = `${(answered/total)*100}%`;
+  document.getElementById('sum-open').textContent = open;
+  document.getElementById('sum-closed').textContent = closed;
+  document.getElementById('sum-na').textContent = na;
+}
+
+buildChecklist();
+
+// Set today's date
+document.getElementById('meta-date').valueAsDate = new Date();
+</script>
+</body>
+</html>
