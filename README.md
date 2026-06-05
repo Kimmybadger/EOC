@@ -2,7 +2,7 @@
 
 **Camp Humphreys · MEDDAC-K / BAACH / BDAACH**
 
-> 📱 **[→ Open Checklist App](EOC_Checklist.html)**  
+> 📱 **[→ Open Checklist App](https://kimmybadger.github.io/EOC/)**  
 > 브라우저에서 바로 열기 — 설치 불필요, 오프라인 사용 가능
 
 -----
